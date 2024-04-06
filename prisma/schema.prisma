@@ -1,0 +1,155 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+//* ---------------Enums----------------- *//
+//! UserRole Enum
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  DOCTOR
+  PATIENT
+}
+
+//! Status Enum
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+  DELETED
+}
+
+//! gender Enum
+enum UserGender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+//! Department Enum
+enum DoctorDepartment {
+  CARDIOLOGY
+  DERMATOLOGY
+  GASTROENTEROLOGY
+  GYNECOLOGY
+  NEPHROLOGY
+  NEUROLOGY
+  ORTHOPEDICS
+  PSYCHIATRY
+  UROLOGY
+}
+
+//! Blood Group Enum
+enum BloodGroup {
+  A_POSITIVE
+  A_NEGATIVE
+  B_POSITIVE
+  B_NEGATIVE
+  O_POSITIVE
+  O_NEGATIVE
+  AB_POSITIVE
+  AB_NEGATIVE
+}
+
+//* ---------------Models----------------- *//
+//! User Model
+model User {
+  id                 String            @id @default(uuid())
+  userId             String?           @unique
+  email              String            @unique
+  password           String
+  role               UserRole
+  needPasswordChange Boolean           @default(true)
+  status             UserStatus        @default(ACTIVE)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  Admin              Admin?
+  PasswordHistory    PasswordHistory[]
+  Doctor             Doctor?
+  Patient            Patient?
+
+  @@map("users")
+}
+
+//! Admin Model
+model Admin {
+  id           String     @id @default(uuid())
+  name         String
+  email        String     @unique
+  gender       UserGender
+  contactNo    String
+  profileImage String?
+  isDeleted    Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  //: Relation with User
+  user User @relation(fields: [email], references: [email])
+
+  @@map("admins")
+}
+
+//! Password History Model
+model PasswordHistory {
+  id        String   @id @default(uuid())
+  userId    String
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("password_histories")
+}
+
+//! Doctor Model
+model Doctor {
+  id                 String           @id @default(uuid())
+  userId             String?          @unique
+  name               String
+  email              String           @unique
+  gender             UserGender
+  contactNo          String
+  profileImage       String?
+  address            String?
+  registrationNumber String
+  experience         Int              @default(0)
+  appointmentFee     Int
+  qualification      String
+  currentWorkPlace   String
+  designation        String
+  department         DoctorDepartment
+  averageRating      Float            @default(0)
+  isDeleted          Boolean          @default(false)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  user User @relation(fields: [email], references: [email])
+
+  @@map("doctors")
+}
+
+//! Patient Model
+model Patient {
+  id           String     @id @default(uuid())
+  userId       String?    @unique
+  name         String
+  email        String     @unique
+  age          Int
+  gender       UserGender
+  bloodGroup   BloodGroup
+  contactNo    String
+  address      String
+  profileImage String?
+  isDeleted    Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  user User @relation(fields: [email], references: [email])
+
+  @@map("patients")
+}
